@@ -141,12 +141,15 @@ public class SymmetricCipher {
 		if (array.length % 16 != 0){
 			padding += (16 - array.length % 16);
 		}
+		else{
+			padding += 16;
+		}
 
 		System.out.println("Padding: " + padding);
 
-		byte[] just_padding = new byte[(int)padding + 16];
+		byte[] just_padding = new byte[(int)padding];
 
-		for (int i = 0; i < padding + 16; i++){
+		for (int i = 0; i < padding; i++){
 			System.out.println("Inserto padding, " + i + "º byte.");
 			just_padding[i] = (byte)padding;
 		}
