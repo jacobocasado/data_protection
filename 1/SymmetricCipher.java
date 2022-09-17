@@ -14,9 +14,10 @@ import java.util.Arrays;
 
 public class SymmetricCipher {
 
-    byte[] byteKey;
     SymmetricEncryption s;
     SymmetricEncryption d;
+
+    private static final int AES_BLOCK_SIZE = 16;
 
     // Initialization Vector (fixed)
 
@@ -37,12 +38,14 @@ public class SymmetricCipher {
     /*************************************************************************************/
     public byte[] encryptCBC(byte[] input, byte[] byteKey) throws Exception {
 
+        s = new SymmetricEncryption(byteKey);
+
         byte padding = 0;
 
-        if (input.length % d.AES_BLOCK_SIZE != 0) {
-            padding += (d.AES_BLOCK_SIZE - input.length % d.AES_BLOCK_SIZE);
+        if (input.length % AES_BLOCK_SIZE != 0) {
+            padding += (AES_BLOCK_SIZE - input.length % AES_BLOCK_SIZE);
         } else {
-            padding += d.AES_BLOCK_SIZE;
+            padding += AES_BLOCK_SIZE;
         }
 
         System.out.println("Padding: " + padding);
@@ -60,27 +63,27 @@ public class SymmetricCipher {
         System.out.println(Arrays.toString(plain_text));
 
         // Start CBC cipher
-        int numberOfBlocks = plain_text.length / d.AES_BLOCK_SIZE; // Symbol / symbol per block
+        int numberOfBlocks = plain_text.length / AES_BLOCK_SIZE; // Symbol / symbol per block
         System.out.println("Number of blocks: " + numberOfBlocks);
         byte[] cypherText = new byte[plain_text.length];           // All the cypher text
-        byte[] currentBlock = new byte[(int) d.AES_BLOCK_SIZE];    // Current chuck of plain test (16B per iteration)
-        byte[] afterBlock = new byte[(int) d.AES_BLOCK_SIZE];      // Text just after apply AES
+        byte[] currentBlock = new byte[(int) AES_BLOCK_SIZE];    // Current chuck of plain test (16B per iteration)
+        byte[] afterBlock = new byte[(int) AES_BLOCK_SIZE];      // Text just after apply AES
         byte[] beforeBlock;                                        // Text just before apply AES
 
-        for (int i = 0, j = 0; j < numberOfBlocks; i += 16, j++) {
-            System.arraycopy(plain_text, i, currentBlock, 0, d.AES_BLOCK_SIZE); // Split in chunks
+        for (int i = 0, j = 0; j < numberOfBlocks; i += AES_BLOCK_SIZE, j++) {
+            System.arraycopy(plain_text, i, currentBlock, 0, AES_BLOCK_SIZE); // Split in chunks
             System.out.println(Arrays.toString(currentBlock));
             // At each iteration, we have a block of 16 bytes
             if (i == 0) {  // First time use iv
-                beforeBlock = byteArrayXor(new SymmetricCipher().iv, currentBlock, 16);
+                beforeBlock = byteArrayXor(new SymmetricCipher().iv, currentBlock, AES_BLOCK_SIZE);
             } else {
-                beforeBlock = byteArrayXor(afterBlock, currentBlock, 16);
+                beforeBlock = byteArrayXor(afterBlock, currentBlock, AES_BLOCK_SIZE);
             }
 
             // Apply AES algorithm
             afterBlock = s.encryptBlock(beforeBlock);
             // Copy the cipher text in the final buffer
-            System.arraycopy(afterBlock, 0, cypherText, i, d.AES_BLOCK_SIZE); // Split in chunks
+            System.arraycopy(afterBlock, 0, cypherText, i, AES_BLOCK_SIZE); // Split in chunks
         }
 
         return cypherText;
@@ -95,17 +98,17 @@ public class SymmetricCipher {
     public byte[] decryptCBC(byte[] input, byte[] byteKey) throws Exception {
         byte[] finalplaintext = new byte[input.length];
 
-
+        d = new SymmetricEncryption(byteKey);
         // Start CBC cipher
-        int numberOfBlocks = input.length / d.AES_BLOCK_SIZE;      // Symbol / symbol per block
+        int numberOfBlocks = input.length / AES_BLOCK_SIZE;      // Symbol / symbol per block
         System.out.println("Number of blocks: " + numberOfBlocks);
-        byte[] currentBlock = new byte[(int) d.AES_BLOCK_SIZE];    // Current chuck of plain test (16B per iteration)
-        byte[] previousBlock = new byte[(int) d.AES_BLOCK_SIZE];   // Current chuck of plain test (16B per iteration)
+        byte[] currentBlock = new byte[(int) AES_BLOCK_SIZE];    // Current chuck of plain test (16B per iteration)
+        byte[] previousBlock = new byte[(int) AES_BLOCK_SIZE];   // Current chuck of plain test (16B per iteration)
         byte[] afterBlock;                                         // Text just after apply AES
         byte[] xoredBlock;                                         // Text just before apply AES
 
-        for (int i = 0, j = 0; j < numberOfBlocks; i += 16, j++) {
-            System.arraycopy(input, i, currentBlock, 0, d.AES_BLOCK_SIZE); // Split in chunks
+        for (int i = 0, j = 0; j < numberOfBlocks; i += AES_BLOCK_SIZE, j++) {
+            System.arraycopy(input, i, currentBlock, 0, AES_BLOCK_SIZE); // Split in chunks
             System.out.println(Arrays.toString(currentBlock));
 
             // Apply AES algorithm
@@ -113,15 +116,15 @@ public class SymmetricCipher {
             System.out.println(Arrays.toString(afterBlock));
 
             if (i == 0) {  // First time use iv
-                xoredBlock = byteArrayXor(new SymmetricCipher().iv, afterBlock, 16);
+                xoredBlock = byteArrayXor(new SymmetricCipher().iv, afterBlock, AES_BLOCK_SIZE);
             } else {
-                xoredBlock = byteArrayXor(previousBlock, afterBlock, 16);
+                xoredBlock = byteArrayXor(previousBlock, afterBlock, AES_BLOCK_SIZE);
             }
             // Keep the current chunk of cypher code to use it in the next iteration
-            System.arraycopy(currentBlock, 0, previousBlock, 0, d.AES_BLOCK_SIZE);
+            System.arraycopy(currentBlock, 0, previousBlock, 0, AES_BLOCK_SIZE);
 
             // Copy the cipher text in the final buffer
-            System.arraycopy(xoredBlock, 0, finalplaintext, i, d.AES_BLOCK_SIZE); // Split in chunks
+            System.arraycopy(xoredBlock, 0, finalplaintext, i, AES_BLOCK_SIZE); // Split in chunks
         }
 
         // Remove the padding
@@ -134,9 +137,6 @@ public class SymmetricCipher {
 
     public static byte[] method(File file)
             throws IOException {
-
-        // Bloques de 16 caracteres.
-        //
 
         // Creating an object of FileInputStream to
         // read from a file
@@ -191,71 +191,43 @@ public class SymmetricCipher {
 
 
     public static void main(String[] args)
-            throws IOException {
+            throws Exception {
+
+                // Random Key Generation
+        byte[] key = new byte [AES_BLOCK_SIZE];
+        for (int i = 0; i < AES_BLOCK_SIZE; i++){
+            key[i] = (byte) (Math.random() * 128);
+        }
+
+        String key2_string = "Thats my Kung Fu";
+        byte[] key2 = key2_string.getBytes(); 
+
+        SymmetricCipher sCipher = new SymmetricCipher();
 
         // Creating an object of File class and
         // providing local directory path of a file
         File path = new File(
-                "/home/skiz0/Desktop/data_protection/1/text.txt");
+                "./text.txt");
 
         // Calling the Method1 in main() to
         // convert file to byte array
-        byte[] array = method(path);
+        byte[] plaintext = method(path);
 
-        // TODO only add extra block of padding when module is 0
-        // if module is not 0, add n bytes of n value
-        // Printing the byte array
-        System.out.print(Arrays.toString(array) + "\n");
+        byte[] cyphertext = sCipher.encryptCBC(plaintext, key2);
+        
+        System.out.println("Texto cifrado: " + Arrays.toString(cyphertext));
 
-        byte padding = 0;
+        String cyphertext_string = new String(cyphertext);
 
-        if (array.length % 16 != 0) {
-            padding += (16 - array.length % 16);
-        } else {
-            padding += 16;
-        }
+        System.out.println("Texto cifrado: " + cyphertext_string);
 
-        System.out.println("Padding: " + padding);
+        byte[] plaintext_again = sCipher.decryptCBC(cyphertext, key2);
+        String plaintext_again_string = new String(plaintext_again);
 
-        byte[] just_padding = new byte[(int) padding];
-
-        for (int i = 0; i < padding; i++) {
-            System.out.println("Inserto padding, " + i + "º byte.");
-            just_padding[i] = (byte) padding;
-        }
-
-        System.out.println(Arrays.toString(just_padding) + just_padding.length);
-
-        byte[] plain_text = joinByteArray(array, just_padding);
-        System.out.println(Arrays.toString(plain_text));
-
-        // Start CBC cipher
-        int numberOfBlocks = plain_text.length / 16; // Symbol / symbol per block
-        System.out.println("Number of blocks: " + numberOfBlocks);
-        byte[] cypher_text = new byte[plain_text.length]; // All the cypher text
-        byte[] current_block = new byte[(int) 16];        // Current chuck of plain test (16B per iteration)
-        byte[] after_block = new byte[(int) 16];          // Text just after apply AES
-        byte[] before_block;                              // Text just before apply AES
-//FYI:		public static void arraycopy(Object src, int srcPos, Object dest, int destPos, int length)
-        for (int i = 0, j = 0; j < numberOfBlocks; i += 16, j++) {
-            System.arraycopy(plain_text, i, current_block, 0, 16); // Split in chunks
-            System.out.println(Arrays.toString(current_block));
-            // At each iteration, we have a block of 16 bytes
-            if (i == 0) {  // First time use iv
-                before_block = byteArrayXor(new SymmetricCipher().iv, current_block, 16);
-            } else {
-                before_block = byteArrayXor(after_block, current_block, 16);
-            }
-
-            // Apply AES algorithm
-            after_block = before_block;// TODO: AES HERE, llamar a encryptBlock(before_block)
-            // Copy the cipher text in the final buffer
-            System.arraycopy(after_block, 0, cypher_text, i, 16); // Split in chunks
-        }
-        System.out.println(Arrays.toString(cypher_text));
+        System.out.println("Texto descrifrado: " + plaintext_again_string);
 
 
-    }
+    }   
 
 }
 

@@ -47,7 +47,7 @@ public class SymmetricEncryption {
 	}
 
     /*************************************************************************************/
-	/* Method to encrypt 1 block of plaintext using AES */
+	/* Method to encrypt 1 block of1 block o plaintext using AES */
     /*************************************************************************************/
 	public byte[] encryptBlock(byte[] input) throws IllegalBlockSizeException, BadPaddingException {
 
