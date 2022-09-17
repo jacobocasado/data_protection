@@ -124,7 +124,12 @@ public class SymmetricCipher {
             System.arraycopy(xoredBlock, 0, finalplaintext, i, d.AES_BLOCK_SIZE); // Split in chunks
         }
 
-        return finalplaintext;
+        // Remove the padding
+        int padding = finalplaintext[finalplaintext.length-1];
+        int finalLength = finalplaintext.length - padding;
+        byte[] finalPlainTextNoPadding = new byte[finalLength];
+        System.arraycopy(finalplaintext, 0, finalPlainTextNoPadding, 0, finalLength);
+        return finalPlainTextNoPadding;
     }
 
     public static byte[] method(File file)
