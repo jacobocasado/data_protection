@@ -1,3 +1,10 @@
+
+// Autores:
+/**
+ * Jacobo Casado de Gracia  
+ * Angel Casanova Bienzobas
+ */
+
 import java.io.FileDescriptor;
 import java.io.IOException;
 import java.io.InputStream;
@@ -71,6 +78,7 @@ public class SymmetricCipher {
         byte[] beforeBlock;                                        // Text just before apply AES
 
         for (int i = 0, j = 0; j < numberOfBlocks; i += AES_BLOCK_SIZE, j++) {
+            
             System.arraycopy(plain_text, i, currentBlock, 0, AES_BLOCK_SIZE); // Split in chunks
             System.out.println(Arrays.toString(currentBlock));
             // At each iteration, we have a block of 16 bytes
@@ -102,17 +110,17 @@ public class SymmetricCipher {
         // Start CBC cipher
         int numberOfBlocks = input.length / AES_BLOCK_SIZE;      // Symbol / symbol per block
         System.out.println("Number of blocks: " + numberOfBlocks);
-        byte[] currentBlock = new byte[(int) AES_BLOCK_SIZE];    // Current chuck of plain test (16B per iteration)
         byte[] previousBlock = new byte[(int) AES_BLOCK_SIZE];   // Current chuck of plain test (16B per iteration)
         byte[] afterBlock;                                         // Text just after apply AES
         byte[] xoredBlock;                                         // Text just before apply AES
 
         for (int i = 0, j = 0; j < numberOfBlocks; i += AES_BLOCK_SIZE, j++) {
+            byte[] currentBlock = new byte[(int) AES_BLOCK_SIZE];    // Current chuck of plain test (16B per iteration)
             System.arraycopy(input, i, currentBlock, 0, AES_BLOCK_SIZE); // Split in chunks
             System.out.println(Arrays.toString(currentBlock));
 
             // Apply AES algorithm
-            afterBlock = s.decryptBlock(currentBlock);
+            afterBlock = d.decryptBlock(currentBlock);
             System.out.println(Arrays.toString(afterBlock));
 
             if (i == 0) {  // First time use iv
@@ -168,18 +176,6 @@ public class SymmetricCipher {
 
     }
 
-    //	public static void arraycopy(Object src, int srcPos, Object dest, int destPos, int length)
-    public static void splitByteArray(byte[] input) {
-
-        byte[] cipher = new byte[8];
-        byte[] nonce = new byte[4];
-        byte[] extra = new byte[2];
-        System.arraycopy(input, 0, cipher, 0, cipher.length);
-        System.arraycopy(input, cipher.length, nonce, 0, nonce.length);
-        System.arraycopy(input, cipher.length + nonce.length, extra, 0, extra.length);
-
-    }
-
     public static byte[] byteArrayXor(final byte[] s1, final byte[] s2, final int length) {
         byte[] ret = new byte[length];
 
@@ -193,14 +189,20 @@ public class SymmetricCipher {
     public static void main(String[] args)
             throws Exception {
 
-                // Random Key Generation
-        byte[] key = new byte [AES_BLOCK_SIZE];
+        // Random Key Generation
+         byte[] key = new byte [AES_BLOCK_SIZE];
         for (int i = 0; i < AES_BLOCK_SIZE; i++){
-            key[i] = (byte) (Math.random() * 128);
-        }
+             key[i] = (byte) (Math.random() * 128);
+         }
 
-        String key2_string = "Thats my Kung Fu";
+        // Fixed key generation
+        String key2_string = "1234567890123456";
         byte[] key2 = key2_string.getBytes(); 
+
+        // Fixed key generation (with byte vector)
+        byte[] key3 = new byte[]{(byte) 49, (byte) 50, (byte) 51, (byte) 52, (byte) 53, (byte) 54,
+            (byte) 55, (byte) 56, (byte) 57, (byte) 48, (byte) 49, (byte) 50, (byte) 51, (byte) 52,
+            (byte) 53, (byte) 54};
 
         SymmetricCipher sCipher = new SymmetricCipher();
 
@@ -213,19 +215,29 @@ public class SymmetricCipher {
         // convert file to byte array
         byte[] plaintext = method(path);
 
-        byte[] cyphertext = sCipher.encryptCBC(plaintext, key2);
-        
+        byte[] cyphertext = sCipher.encryptCBC(plaintext, key3);
+    
         System.out.println("Texto cifrado: " + Arrays.toString(cyphertext));
 
         String cyphertext_string = new String(cyphertext);
 
         System.out.println("Texto cifrado: " + cyphertext_string);
 
-        byte[] plaintext_again = sCipher.decryptCBC(cyphertext, key2);
+        try(FileOutputStream fos = new FileOutputStream("./test_enc_but_mine.txt")){
+            fos.write(cyphertext);
+        }
+
+        byte[] plaintext_again = sCipher.decryptCBC(cyphertext, key3);
+
+        // try (PrintWriter out = new PrintWriter("test_enc_but_mine.txt")) {
+        //     out.print(cyphertext_string);
+        // }
+
+        
+
         String plaintext_again_string = new String(plaintext_again);
 
         System.out.println("Texto descrifrado: " + plaintext_again_string);
-
 
     }   
 
