@@ -1,17 +1,11 @@
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.SecureRandom;
-import java.security.Security;
 import java.security.Signature;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -43,7 +37,7 @@ public class RSALibrary {
       final KeyPairGenerator keyGen = KeyPairGenerator.getInstance(ALGORITHM);
       keyGen.initialize(1024);
 
-      // TO-DO: Use KeyGen to generate a public and a private key
+      //Use KeyGen to generate a public and a private key
       KeyPair keyPair = keyGen.generateKeyPair();
 
       PublicKey publicKey = keyPair.getPublic();
@@ -53,12 +47,12 @@ public class RSALibrary {
       X509EncodedKeySpec keyspecPub = new X509EncodedKeySpec(publicKey.getEncoded());
       PKCS8EncodedKeySpec keyspecPriv = new PKCS8EncodedKeySpec(privateKey.getEncoded());
 
-      // TO-DO: store the public key in the file PUBLIC_KEY_FILE
+      //store the public key in the file PUBLIC_KEY_FILE
       try (FileOutputStream fos = new FileOutputStream(PUBLIC_KEY_FILE)) {
         fos.write(keyspecPub.getEncoded());
       }
 
-      // TO-DO: store the private key in the file PRIVATE_KEY_FILE
+      //store the private key in the file PRIVATE_KEY_FILE
       try (FileOutputStream fos = new FileOutputStream(PRIVATE_KEY_FILE)) {
         fos.write(keyspecPriv.getEncoded());
       }
@@ -83,7 +77,7 @@ public class RSALibrary {
       // Gets an RSA cipher object
       final Cipher cipher = Cipher.getInstance(ALGORITHM);
 
-      // TO-DO: initialize the cipher object and use it to encrypt the plaintext
+      //initialize the cipher object and use it to encrypt the plaintext
       cipher.init(Cipher.ENCRYPT_MODE, key);
       ciphertext = cipher.doFinal(plaintext);
 
@@ -106,7 +100,7 @@ public class RSALibrary {
       // Gets an RSA cipher object
       final Cipher cipher = Cipher.getInstance(ALGORITHM);
 
-      // TO-DO: initialize the cipher object and use it to decrypt the ciphertext
+      //initialize the cipher object and use it to decrypt the ciphertext
       cipher.init(Cipher.DECRYPT_MODE, key);
       plaintext = cipher.doFinal(ciphertext);
 
@@ -131,13 +125,13 @@ public class RSALibrary {
       // Gets a Signature object
       Signature signature = Signature.getInstance("SHA1withRSA");
 
-      // TO-DO: initialize the signature oject with the private key
+      //initialize the signature oject with the private key
       signature.initSign(key);
 
-      // TO-DO: set plaintext as the bytes to be signed
+      //set plaintext as the bytes to be signed
       signature.update(plaintext);
 
-      // TO-DO: sign the plaintext and obtain the signature (signedInfo)
+      //sign the plaintext and obtain the signature (signedInfo)
       signedInfo = signature.sign();
 
     } catch (Exception ex) {
@@ -164,13 +158,13 @@ public class RSALibrary {
       // Gets a Signature object
       Signature signature = Signature.getInstance("SHA1withRSA");
 
-      // TO-DO: initialize the signature oject with the public key
+      //initialize the signature oject with the public key
       signature.initVerify(key);
 
-      // TO-DO: set plaintext as the bytes to be veryfied
+      //set plaintext as the bytes to be veryfied
       signature.update(plaintext);
 
-      // TO-DO: verify the signature (signed). Store the outcome in the boolean result
+      //verify the signature (signed). Store the outcome in the boolean result
       result = signature.verify(signed);
 
     } catch (Exception ex) {

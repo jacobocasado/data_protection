@@ -9,7 +9,6 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 import java.io.File;
 import java.io.FileInputStream;
-import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 
 
@@ -69,17 +68,17 @@ public class Test_RSA {
         // Calling the Method1 in main() to
         // convert file to byte array
         byte[] plaintext_bytes = method(plaintext);
-		System.out.println("TEXTO PLAIN: " + Arrays.toString(plaintext_bytes));
+		System.out.println("TEXTO PLAIN: " + new String(plaintext_bytes));
 
 		byte [] ciphertext = r.encrypt(plaintext_bytes, publicKey);
 
-		System.out.println("TEXTO CIFRADO: " + Arrays.toString(ciphertext));
+		System.out.println("Tras el cifrado: " + new String(ciphertext));
 
 		byte [] plaintext_again = r.decrypt(ciphertext, privateKey);
 
-		System.out.println("TEXTO DESCIFRADO: " + Arrays.toString(plaintext_again));
+		System.out.println("Tras el descifrado: " + new String(plaintext_again));
 
-		System.out.println("ARRAYS: " + Arrays.equals(plaintext_again, plaintext_again));
+		System.out.println("Son iguales los arrays: " + Arrays.equals(plaintext_again, plaintext_again));
 	}
 	
 }
