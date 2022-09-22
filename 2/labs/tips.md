@@ -13,3 +13,10 @@ sabemos como estan leyendo, una vez con el objeto, debemos dumpearla een un fich
 para la 3º práctica
 la clave de sesion y la firma ti enen tamaño fijo -> Para desencriptar es sencillo.
 
+## Links usados para la p2
+https://niels.nu/blog/2016/java-rsa
+
+https://github.com/anujpatel/RSA-Algorithm/blob/master/RSAEncryptionDescription.java
+
+https://cryptobook.nakov.com/digital-signatures/rsa-sign-verify-examples
+
