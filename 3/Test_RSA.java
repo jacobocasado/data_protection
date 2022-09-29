@@ -4,6 +4,7 @@ import java.nio.file.Paths;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
@@ -63,11 +64,72 @@ public class Test_RSA {
 	public static void main(String[] args) throws Exception {
 
 		RSALibrary r = new RSALibrary();
+		SymmetricCipher sCipher = new SymmetricCipher();
 		String sourceFile = "";
 		String destinationFile = "";
-		byte[] sessionKey;
+		byte[] sessionKey = null;
 		byte[] passphrase = null;
+		PrivateKey privateKey = null;
+		PublicKey publicKey = null;
 
+		// Check if args0 == d or e
+		if (args[0].equals("e") || args[0].equals("d")) {
+			try {
+				sourceFile = args[1];
+				destinationFile = args[2];
+			} catch (ArrayIndexOutOfBoundsException ex) {
+				System.out.println("In 'e' and 'd' modes you need to provide both surce and destination files");
+				System.exit(-1);
+			}
+
+			// We read the user password, needed to decrypt.
+			passphrase = readPassphrase();
+
+			/* Read public key */
+			Path path = null;
+			byte[] bytes = null;
+			try {
+				path = Paths.get("./public.key");
+				bytes = Files.readAllBytes(path);
+			} catch (NullPointerException | IOException ex) {
+				System.out.println("It is not possible to acces the ./public.key file");
+				System.exit(-1);
+			}
+
+			// Public key is stored in x509 format
+			try {
+				X509EncodedKeySpec keyspec = new X509EncodedKeySpec(bytes);
+				KeyFactory keyfactory = KeyFactory.getInstance("RSA");
+				publicKey = keyfactory.generatePublic(keyspec);
+			} catch (NullPointerException | InvalidKeySpecException ex) {
+				System.out.println("Worg public key format");
+				System.exit(-1);
+			}
+
+			/* Read private key THAT IS CYPHER WITH OUR PASSPHRASE */
+			byte[] private_key = null;
+			try {
+				path = Paths.get("./private.key");
+				private_key = Files.readAllBytes(path);
+			} catch (NullPointerException | IOException ex) {
+				System.out.println("It is not possible to acces the ./private.key file");
+				System.exit(-1);
+			}
+
+			try {
+				byte[] decrypted_private_key = sCipher.decryptCBC(private_key, passphrase);
+				// Private key is stored in PKCS8 format
+				PKCS8EncodedKeySpec keyspec2 = new PKCS8EncodedKeySpec(decrypted_private_key);
+				KeyFactory keyfactory2 = KeyFactory.getInstance("RSA");
+				privateKey = keyfactory2.generatePrivate(keyspec2);
+			} catch (NullPointerException | InvalidKeySpecException ex) {
+				System.out.println("Error creating private key. You might have entered bad the passphrase. \n 16 characters is not enough!");
+				System.exit(-1);
+			} catch (Exception ex) {
+				System.out.println("Error while decripting the file" );
+				System.exit(-1);
+			}
+		}
 		// Parse the arguments
 		if (args[0].equals("g")) {
 			passphrase = readPassphrase();
@@ -75,31 +137,8 @@ public class Test_RSA {
 			System.out.println("The keys have been generated correctly, check your directories");
 			System.exit(0);
 		} else if (args[0].equals("e")) {
-			sourceFile = args[1];
-			destinationFile = args[2];
-			// We have to decrypt it before reading
-			SymmetricCipher sCipher = new SymmetricCipher();
-			// We read the user password, needed to decrypt.
-			passphrase = readPassphrase();
 			// We randomly generate the session key.
 			sessionKey = rdmPassword();
-
-			/* Read public key */
-			Path path = Paths.get("./public.key");
-			byte[] bytes = Files.readAllBytes(path);
-			// Public key is stored in x509 format
-			X509EncodedKeySpec keyspec = new X509EncodedKeySpec(bytes);
-			KeyFactory keyfactory = KeyFactory.getInstance("RSA");
-			PublicKey publicKey = keyfactory.generatePublic(keyspec);
-
-			/* Read private key THAT IS CYPHER WITH OUR PASSPHRASE */
-			path = Paths.get("./private.key");
-			byte[] private_key = Files.readAllBytes(path);
-			byte[] decrypted_private_key = sCipher.decryptCBC(private_key, passphrase);
-			// Private key is stored in PKCS8 format
-			PKCS8EncodedKeySpec keyspec2 = new PKCS8EncodedKeySpec(decrypted_private_key);
-			KeyFactory keyfactory2 = KeyFactory.getInstance("RSA");
-			PrivateKey privateKey = keyfactory2.generatePrivate(keyspec2);
 
 			// We read the text that we want to cypher.
 			File plaintext = new File(sourceFile);
@@ -131,30 +170,6 @@ public class Test_RSA {
 
 		} else if (args[0].equals("d")) {
 
-			sourceFile = args[1];
-			destinationFile = args[2];
-			// We have to decrypt it before reading
-			SymmetricCipher sCipher = new SymmetricCipher();
-			// We read the user password, needed to decrypt.
-			passphrase = readPassphrase();
-
-			/* Read public key */
-			Path path = Paths.get("./public.key");
-			byte[] bytes = Files.readAllBytes(path);
-			// Public key is stored in x509 format
-			X509EncodedKeySpec keyspec = new X509EncodedKeySpec(bytes);
-			KeyFactory keyfactory = KeyFactory.getInstance("RSA");
-			PublicKey publicKey = keyfactory.generatePublic(keyspec);
-
-			/* Read private key THAT IS CYPHER WITH OUR PASSPHRASE */
-			path = Paths.get("./private.key");
-			byte[] private_key = Files.readAllBytes(path);
-			byte[] decrypted_private_key = sCipher.decryptCBC(private_key, passphrase);
-			// Private key is stored in PKCS8 format
-			PKCS8EncodedKeySpec keyspec2 = new PKCS8EncodedKeySpec(decrypted_private_key);
-			KeyFactory keyfactory2 = KeyFactory.getInstance("RSA");
-			PrivateKey privateKey = keyfactory2.generatePrivate(keyspec2);
-
 			// We read the text that we want to descypher.
 			File cyphertext_plus_things = new File(sourceFile);
 			// We convert the string text with all the things into bytes.
@@ -169,10 +184,6 @@ public class Test_RSA {
 					byte_cyphertext_plus_things.length - 256, byte_cyphertext_plus_things.length - 128);
 			byte[] ciphertext = Arrays.copyOfRange(byte_cyphertext_plus_things, 0,
 					byte_cyphertext_plus_things.length - 256);
-			System.out.println("Longitud sing " + sign.length);
-			System.out.println("Longitud ciphertext_plus_key " + ciphertext_plus_key.length);
-			System.out.println("Longitud encripted_sessionKey " + encripted_sessionKey.length);
-			System.out.println("Longitud ciphertext " + ciphertext.length);
 			// We need to verify the sign. TODO if it's false, we don't let the user
 			// continue.
 			Boolean good_sign = r.verify(ciphertext_plus_key, sign, publicKey);
@@ -200,19 +211,5 @@ public class Test_RSA {
 			System.out.println("java < g | e |d > [sourceFile] [destinationFile]");
 			System.exit(-1);
 		}
-
-		// System.out.println("TEXTO PLAIN: " + new String(plaintext_bytes));
-
-		// byte[] ciphertext = r.encrypt(plaintext_bytes, publicKey);
-
-		// System.out.println("Tras el cifrado: " + new String(ciphertext));
-
-		// byte[] plaintext_again = r.decrypt(ciphertext, privateKey);
-
-		// System.out.println("Tras el descifrado: " + new String(plaintext_again));
-
-		// System.out.println("Son iguales los arrays: " +
-		// Arrays.equals(plaintext_again, plaintext_again));
 	}
-
 }
