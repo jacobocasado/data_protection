@@ -79,6 +79,12 @@ public class Test_RSA {
 		System.out.println("Tras el descifrado: " + new String(plaintext_again));
 
 		System.out.println("Son iguales los arrays: " + Arrays.equals(plaintext_again, plaintext_again));
+
+		byte[] check = r.sign(plaintext_again, privateKey);
+
+		System.out.println(check.length);
+
+		System.out.println((r.verify(plaintext_again, check, publicKey)));
 	}
 	
 }
