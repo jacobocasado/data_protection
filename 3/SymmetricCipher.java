@@ -55,12 +55,12 @@ public class SymmetricCipher {
             padding += AES_BLOCK_SIZE;
         }
 
-        System.out.println("Padding: " + padding);
+        // System.out.println("Padding: " + padding);
 
         byte[] just_padding = new byte[(int) padding];
 
         for (int i = 0; i < padding; i++) {
-            System.out.println("Inserto padding, " + i + "º byte.");
+            // System.out.println("Inserto padding, " + i + "º byte.");
             just_padding[i] = padding;
         }
 
@@ -109,7 +109,7 @@ public class SymmetricCipher {
         d = new SymmetricEncryption(byteKey);
         // Start CBC cipher
         int numberOfBlocks = input.length / AES_BLOCK_SIZE;      // Symbol / symbol per block
-        System.out.println("Number of blocks: " + numberOfBlocks);
+        // System.out.println("Number of blocks: " + numberOfBlocks);
         byte[] previousBlock = new byte[(int) AES_BLOCK_SIZE];   // Current chuck of plain test (16B per iteration)
         byte[] afterBlock;                                         // Text just after apply AES
         byte[] xoredBlock;                                         // Text just before apply AES
@@ -217,11 +217,11 @@ public class SymmetricCipher {
 
         byte[] cyphertext = sCipher.encryptCBC(plaintext, key3);
     
-        System.out.println("Texto cifrado: " + Arrays.toString(cyphertext));
+        // System.out.println("Texto cifrado: " + Arrays.toString(cyphertext));
 
         String cyphertext_string = new String(cyphertext);
 
-        System.out.println("Texto cifrado: " + cyphertext_string);
+        // System.out.println("Texto cifrado: " + cyphertext_string);
 
         try(FileOutputStream fos = new FileOutputStream("./test_enc_but_mine.txt")){
             fos.write(cyphertext);
@@ -233,11 +233,9 @@ public class SymmetricCipher {
         //     out.print(cyphertext_string);
         // }
 
-        
-
         String plaintext_again_string = new String(plaintext_again);
 
-        System.out.println("Texto descrifrado: " + plaintext_again_string);
+        // System.out.println("Texto descrifrado: " + plaintext_again_string);
 
     }   
 

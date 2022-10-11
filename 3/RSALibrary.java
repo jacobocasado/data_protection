@@ -47,8 +47,8 @@ public class RSALibrary {
 
       PublicKey publicKey = keyPair.getPublic();
       PrivateKey privateKey = keyPair.getPrivate();
-      System.out.println("Public Key - " + publicKey);
-      System.out.println("Private Key - " + privateKey);
+      // System.out.println("Public Key - " + publicKey);
+      // System.out.println("Private Key - " + privateKey);
 
       SymmetricCipher sCipher = new SymmetricCipher();
       byte[] privateKey_encoded = sCipher.encryptCBC(privateKey.getEncoded(), passphrase);
