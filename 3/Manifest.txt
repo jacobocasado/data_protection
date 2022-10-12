@@ -1,1 +1,1 @@
-Main-class: Test_RSA
+Main-class: SimpleSec

@@ -15,11 +15,35 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-public class Test_RSA {
+public class SimpleSec {
 
-	public static byte[] rdmPassword() {
-		return "holaholaholahola".getBytes();
-	}
+	// function to generate a random string of length n.
+	// We will use with n=16.
+	public static byte[] rdmPassword(int n) { 
+	
+		// chose a Character random from this String 
+		String AlphaNumericString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+				+ "0123456789"
+				+ "abcdefghijklmnopqrstuvxyz"; 
+		
+		// create StringBuffer size of AlphaNumericString 
+		StringBuilder sb = new StringBuilder(n); 
+		
+		for (int i = 0; i < n; i++) { 
+		
+		// generate a random number between 
+		// 0 to AlphaNumericString variable length 
+		int index 
+			= (int)(AlphaNumericString.length() 
+			* Math.random()); 
+		
+		// add Character one by one in end of sb 
+		sb.append(AlphaNumericString 
+			.charAt(index)); 
+		} 
+		
+		return sb.toString().getBytes(); 
+ 	} 
 
 	public static byte[] readPassphrase() {
 
@@ -27,7 +51,7 @@ public class Test_RSA {
 		Scanner scanner = new Scanner(System.in);
 		System.out.println("Give me the passphrase: ");
 		String passphrase = scanner.nextLine();
-		System.out.println("Your string: " + passphrase);
+		// System.out.println("Your string: " + passphrase);
 		scanner.close();
 		byte[] passphrase_bytes = passphrase.getBytes();
 
@@ -130,7 +154,7 @@ public class Test_RSA {
 				System.out.println("Error while decrypting private key. The passphrase is not right OR key might be corrupted.");
 				System.exit(-1);
 			} catch (Exception ex) {
-				System.out.println("Error while decripting the file");
+				System.out.println("Error while decripting the file. The passphrase is not right.");
 				System.exit(-1);
 			}
 		}
@@ -142,7 +166,7 @@ public class Test_RSA {
 			System.exit(0);
 		} else if (args[0].equals("e")) {
 			// We randomly generate the session key.
-			sessionKey = rdmPassword();
+			sessionKey = rdmPassword(16);
 
 			byte[] plaintext_bytes = new byte[0];
 			// We read the text that we want to cypher.
@@ -160,7 +184,7 @@ public class Test_RSA {
 			// Once the session key is used, we encrypt it with our public key.
 			byte[] cipher_sessionKey = r.encrypt(sessionKey, publicKey);
 			// Size of the encrypted session key: 128 bits or 16 characters.
-			System.out.println("Tamaño de la session key encriptada: " + cipher_sessionKey.length);
+			// System.out.println("Tamaño de la session key encriptada: " + cipher_sessionKey.length);
 
 			// We append the encrypted session key to the cyphertext.
 			byte[] cyphertext_plus_encryptedskey = SymmetricCipher.joinByteArray(ciphertext_bytes, cipher_sessionKey);
@@ -168,7 +192,7 @@ public class Test_RSA {
 			// We sign the cyphertext plus the encrypted session key with our private key
 			byte[] signed = r.sign(cyphertext_plus_encryptedskey, privateKey);
 			// The hash size should be 20 bytes or 160 bits.
-			System.out.println("Tamaño del hash: " + signed.length);
+			// System.out.println("Tamaño del hash: " + signed.length);
 
 			byte[] message = SymmetricCipher.joinByteArray(cyphertext_plus_encryptedskey, signed);
 
