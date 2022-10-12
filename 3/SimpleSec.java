@@ -8,6 +8,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,40 +20,45 @@ public class SimpleSec {
 
 	// function to generate a random string of length n.
 	// We will use with n=16.
-	public static byte[] rdmPassword(int n) { 
-	
-		// chose a Character random from this String 
+	public static byte[] rdmPassword(int n) {
+
+		// chose a Character random from this String
 		String AlphaNumericString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 				+ "0123456789"
-				+ "abcdefghijklmnopqrstuvxyz"; 
-		
-		// create StringBuffer size of AlphaNumericString 
-		StringBuilder sb = new StringBuilder(n); 
-		
-		for (int i = 0; i < n; i++) { 
-		
-		// generate a random number between 
-		// 0 to AlphaNumericString variable length 
-		int index 
-			= (int)(AlphaNumericString.length() 
-			* Math.random()); 
-		
-		// add Character one by one in end of sb 
-		sb.append(AlphaNumericString 
-			.charAt(index)); 
-		} 
-		
-		return sb.toString().getBytes(); 
- 	} 
+				+ "abcdefghijklmnopqrstuvxyz";
+
+		// create StringBuffer size of AlphaNumericString
+		StringBuilder sb = new StringBuilder(n);
+
+		for (int i = 0; i < n; i++) {
+
+			// generate a random number between
+			// 0 to AlphaNumericString variable length
+			int index = (int) (AlphaNumericString.length()
+					* Math.random());
+
+			// add Character one by one in end of sb
+			sb.append(AlphaNumericString
+					.charAt(index));
+		}
+
+		return sb.toString().getBytes();
+	}
 
 	public static byte[] readPassphrase() {
 
 		// Read Passwd from the terminal
-		Scanner scanner = new Scanner(System.in);
 		System.out.println("Give me the passphrase: ");
-		String passphrase = scanner.nextLine();
+		String passphrase = "";
+		try (Scanner scanner = new Scanner(System.in)) {
+			passphrase = scanner.nextLine();
+		} catch (NoSuchElementException | IllegalStateException ex) {
+			System.out.println("Invalid parameter introduced as a key, try another");
+			System.exit(-1);
+		}
+
 		// System.out.println("Your string: " + passphrase);
-		scanner.close();
+
 		byte[] passphrase_bytes = passphrase.getBytes();
 
 		// Checkear la longitud y acabar si no es de 16 caracteres.
@@ -97,6 +103,13 @@ public class SimpleSec {
 		PrivateKey privateKey = null;
 		PublicKey publicKey = null;
 
+		// Check the number of arguments
+		if (args.length == 0 || args.length > 3 || (args.length == 1 && !args[0].equals("g"))) {
+			System.out.println(
+					"Invalid number of arguments, follow the patten:\n\t java -jar SecureSec command [sourceFile] [destinationFile]");
+			System.exit(-1);
+		}
+
 		// Check if args0 == d or e
 		if (args[0].equals("e") || args[0].equals("d")) {
 			try {
@@ -105,7 +118,6 @@ public class SimpleSec {
 			} catch (ArrayIndexOutOfBoundsException ex) {
 				System.out.println("In 'e' and 'd' modes you need to provide both source and destination files.");
 				System.out.println("Usage: java -jar SecureSec.jar d|e -input -output");
-
 				System.exit(-1);
 			}
 
@@ -151,7 +163,8 @@ public class SimpleSec {
 				KeyFactory keyfactory2 = KeyFactory.getInstance("RSA");
 				privateKey = keyfactory2.generatePrivate(keyspec2);
 			} catch (InvalidKeySpecException ex) {
-				System.out.println("Error while decrypting private key. The passphrase is not right OR key might be corrupted.");
+				System.out.println(
+						"Error while decrypting private key. The passphrase is not right OR key might be corrupted.");
 				System.exit(-1);
 			} catch (Exception ex) {
 				System.out.println("Error while decripting the file. The passphrase is not right.");
@@ -170,21 +183,23 @@ public class SimpleSec {
 
 			byte[] plaintext_bytes = new byte[0];
 			// We read the text that we want to cypher.
-			File plaintext = new File(sourceFile);
+			File plaintext = null;
 			// We convert the string text into bytes.
 			try {
+				plaintext = new File(sourceFile);
 				plaintext_bytes = method(plaintext);
-			} catch (IOException e) {
+			} catch (NullPointerException | IOException e) {
 				System.out.println("File specified to encrypt (" + sourceFile + ") not found.");
 				System.exit(-1);
 			}
-			
+
 			// We encrypt the text with our session key, randomly generated.
 			byte[] ciphertext_bytes = sCipher.encryptCBC(plaintext_bytes, sessionKey);
 			// Once the session key is used, we encrypt it with our public key.
 			byte[] cipher_sessionKey = r.encrypt(sessionKey, publicKey);
 			// Size of the encrypted session key: 128 bits or 16 characters.
-			// System.out.println("Tamaño de la session key encriptada: " + cipher_sessionKey.length);
+			// System.out.println("Tamaño de la session key encriptada: " +
+			// cipher_sessionKey.length);
 
 			// We append the encrypted session key to the cyphertext.
 			byte[] cyphertext_plus_encryptedskey = SymmetricCipher.joinByteArray(ciphertext_bytes, cipher_sessionKey);
@@ -196,11 +211,9 @@ public class SimpleSec {
 
 			byte[] message = SymmetricCipher.joinByteArray(cyphertext_plus_encryptedskey, signed);
 
-			try {
-				try (FileOutputStream fos = new FileOutputStream(destinationFile)) {
-					fos.write(message);
-				}
-			} catch(FileNotFoundException f){
+			try (FileOutputStream fos = new FileOutputStream(destinationFile)) {
+				fos.write(message);
+			} catch (FileNotFoundException f) {
 				System.out.println("Problem at destination file. Exiting.");
 				System.exit(-1);
 			}
@@ -210,14 +223,15 @@ public class SimpleSec {
 
 		} else if (args[0].equals("d")) {
 
-			// We read the text that we want to descypher.
-			File cyphertext_plus_things = new File(sourceFile);
 			// We convert the string text with all the things into bytes.
 			byte[] byte_cyphertext_plus_things = new byte[0];
+			// We read the text that we want to descypher.
+			File cyphertext_plus_things = null;
 
 			try {
+				cyphertext_plus_things = new File(sourceFile);
 				byte_cyphertext_plus_things = method(cyphertext_plus_things);
-			} catch (IOException e) {
+			} catch (NullPointerException | IOException e) {
 				System.out.println("File specified to decrypt (" + sourceFile + ") not found.");
 				System.exit(0);
 			}
@@ -246,11 +260,9 @@ public class SimpleSec {
 			// We decipher the session key
 			byte[] decripted_plainText = sCipher.decryptCBC(ciphertext, decripted_sessionKey);
 
-			try {
-				try (FileOutputStream fos = new FileOutputStream(destinationFile)) {
-					fos.write(decripted_plainText);
-				}
-			} catch(FileNotFoundException f){
+			try (FileOutputStream fos = new FileOutputStream(destinationFile)) {
+				fos.write(decripted_plainText);
+			} catch (FileNotFoundException f) {
 				System.out.println("Problem at destination file. Exiting.");
 				System.exit(-1);
 			}
