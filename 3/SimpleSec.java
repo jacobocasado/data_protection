@@ -18,6 +18,8 @@ import java.io.IOException;
 
 public class SimpleSec {
 
+	// Jacobo Casado de Gracia y Angel Casanova Bienzobas
+
 	// function to generate a random string of length n.
 	// We will use with n=16.
 	public static byte[] rdmPassword(int n) {
@@ -106,7 +108,7 @@ public class SimpleSec {
 		// Check the number of arguments
 		if (args.length == 0 || args.length > 3 || (args.length == 1 && !args[0].equals("g"))) {
 			System.out.println(
-					"Invalid number of arguments, follow the patten:\n\t java -jar SecureSec command [sourceFile] [destinationFile]");
+					"Invalid number of arguments, follow the pattern:\n\t java -jar SimpleSec.jar <g|e|d> [sourceFile] [destinationFile]");
 			System.exit(-1);
 		}
 
@@ -131,7 +133,7 @@ public class SimpleSec {
 				path = Paths.get("./public.key");
 				bytes = Files.readAllBytes(path);
 			} catch (NullPointerException | IOException ex) {
-				System.out.println("It is not possible to acces the ./public.key file. \n Try again.");
+				System.out.println("It is not possible to access the ./public.key file. \n Try again.");
 				System.exit(-1);
 			}
 
@@ -164,10 +166,10 @@ public class SimpleSec {
 				privateKey = keyfactory2.generatePrivate(keyspec2);
 			} catch (InvalidKeySpecException ex) {
 				System.out.println(
-						"Error while decrypting private key. The passphrase is not right OR key might be corrupted.");
+						"Error while decrypting private key. The passphrase is not right, or maybe the key has been altered.");
 				System.exit(-1);
 			} catch (Exception ex) {
-				System.out.println("Error while decripting the file. The passphrase is not right.");
+				System.out.println("Error while decripting the file. The passphrase is not right, or maybe the key has been altered.");
 				System.exit(-1);
 			}
 		}
@@ -272,7 +274,7 @@ public class SimpleSec {
 
 		} else {
 			System.out.println("The arguments provided are invalid.");
-			System.out.println("Usage: java <g|e|d> [sourceFile] [destinationFile]");
+			System.out.println("Usage: java -jar SimpleSec.jar <g|e|d> [sourceFile] [destinationFile]");
 			System.exit(-1);
 		}
 	}
